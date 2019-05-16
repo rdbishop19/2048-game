@@ -4,48 +4,134 @@ Created on Thu May  9 11:54:42 2019
 
 @author: BishopRD
 """
-import random
+import random, copy, math, time, sys
 import collections
 import matplotlib.pyplot as plt
-import copy
-import math
-import time
+from myColors import *
 
-#import pygame as pg
-#import sys
-#pg.init()
+import pygame as pg
 
-#screen = pg.display.set_mode((400,400))
-manual = False
+global game_over
+global arr
+global high_scores_board
+global move_count
+global top_score_move_count
+global manual
 
-def l():
-    left()
-def r():
-    right()
-def u():
-    up()
-def d():
-    down()
-    
+manual = True
+pg.init()
+my_font = pg.font.SysFont('Monospace',25)
+my_font.set_bold(True)
+header_font = pg.font.SysFont('Monospace', 40)
+score_font = pg.font.SysFont('Monospace', 25)
+restart_font = pg.font.SysFont('Monospace', 30)
+
+header = header_font.render('2048', 1, (0,255,0))
+# # text_surface = my_font.render(arr, False, (0,255,0))
+GAME_BOARD = pg.display.set_mode((400,500), 0, 32)
+
+# surf = pg.Surface((4,4))
+# pg.surfarray.blit_array(GAME_BOARD, arr)
+pg.display.set_caption('2048')
+
+
+def main(manual=True):
+
+    new_game()
+    print_matrix()
+    # manual = False
+    if not manual:
+        while not check_game_over():
+            logic_algorithms()
+
+    while True:
+
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                sys.exit()
+
+            if not game_over:
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_UP:
+                        # print('U')
+                        up()
+                    elif event.key == pg.K_DOWN:
+                        # print('D')
+                        down()
+                    elif event.key == pg.K_LEFT:
+                        # print('L')
+                        left()
+                    elif event.key == pg.K_RIGHT:
+                        # print('R')
+                        right()
+                    print_matrix()
+            else:
+                print_game_over()
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_r:
+                        main()
+
+        pg.display.update()
+        # pg.display.flip()
+    new_game()
+
+def print_matrix():
+
+    GAME_BOARD.fill((0,0,0))
+    pg.draw.rect(GAME_BOARD, (0,50,0), (155,25,110,23))
+    GAME_BOARD.blit(header, ((400/2)-40,10))
+
+    tileMatrix2 = [[str(x) if x != 0 else str() for x in row] for row in arr]
+    # print(tileMatrix2)
+    for i in range(0, 4):
+        for j in range(0, 4):
+            pg.draw.rect(GAME_BOARD, getColor(arr[j][i]), (i*(400/4), j*(400/4) + 100, 400/4.1, 400/4.1))
+            
+            label = my_font.render(str(tileMatrix2[j][i]), 1, getColorNum(arr[j][i]))
+            # label2 = score_font.render("score: " + str(TOTAL_POINTS), 1, (0, 255, 0))
+            label2 = score_font.render(str(TOTAL_POINTS), 1, (0, 255, 0))
+
+            len_value = len(tileMatrix2[j][i])
+            GAME_BOARD.blit(label, (i*(400/4) + 40 - (len_value*7), j*(400/4) + 138))
+            GAME_BOARD.blit(label2, ((200 - len(str(TOTAL_POINTS))*5), 60))
+
+def print_game_over():
+
+    print_matrix()
+    pg.draw.rect(GAME_BOARD, (0,0,0), (90,260,240,100))
+    game_over_banner = header_font.render('GAME OVER', 1, (0,255,0))
+    reset_banner = restart_font.render('(r)estart', 1, (0,255,0))
+
+    GAME_BOARD.blit(game_over_banner, (100, 265))
+    GAME_BOARD.blit(reset_banner, (130, 320))
+
 def move():
     """Base logic for all directional moves."""
-    
+    global TOTAL_POINTS    
+
     for row in arr:
         # move zeros to end of row
         for col, current_num in enumerate(row):
             if current_num == 0:
                 row.remove(current_num)
-                row.append(current_num)
+                row.append(0)
         # combine adjacent tiles that match
         for col, current_num in enumerate(row):
             if current_num != 0 and col < 3:
                 adjacent_num = row[col+1]
                 if current_num == adjacent_num:
                     new = current_num + adjacent_num
-                    row.remove(current_num)
+                    TOTAL_POINTS += new
+                    time.sleep(0.01)
                     row.pop(col)
+                    time.sleep(0.01)
                     row.insert(col, new)
+                    time.sleep(0.01)
                     row.append(0)
+                    time.sleep(0.01)
+                    row.pop(col+1)
+                    print(row)
 
 def check_if_manual():
     if manual:
@@ -57,7 +143,7 @@ def left():
     check_non_move()
     move()
     add_new()
-    check_if_manual()
+    # check_if_manual()
     
 def right():
     """Slide tiles RIGHT"""
@@ -67,7 +153,7 @@ def right():
     move()
     row_reverse()
     add_new()
-    check_if_manual()
+    # check_if_manual()
         
 def up():
     """Slide tiles UP"""
@@ -77,7 +163,7 @@ def up():
     move()
     zip_arr()
     add_new()
-    check_if_manual()
+    # check_if_manual()
     
 def down():
     """Slide tiles DOWN"""
@@ -89,7 +175,7 @@ def down():
     row_reverse()
     zip_arr()
     add_new()
-    check_if_manual()
+    # check_if_manual()
 
 def row_reverse():
     for row in arr:
@@ -112,7 +198,7 @@ def check_non_move():
 def add_new():
     """Add new number to board."""
     global move_count
-    
+
     if original_arr == arr:
         return False
     else:
@@ -124,68 +210,64 @@ def add_new():
             replace = random.choice(zeros)
             arr[row].remove(arr[row][replace])
             arr[row].insert(replace, new)
-#            print_arr()
-#            time.sleep(0.5)
             move_count += 1
+            if not manual:
+                time.sleep(0.2)    
+                print_matrix()
+                pg.display.update()
+            else:
+                print_arr()
             check_game_over()
+            # return True
         else:
             add_new()
 
 def get_new_number():
     """Create new random number to add to board."""
-    
     new = 2
-    new_prob = random.randrange(0,10)
-    if new_prob >= 9:
+    if random.randint(0,10) >= 9:
         new = 4
     return new
 
 def check_game_over():
     """Stop game if no more moves."""
-    
     global game_over
     
 #    available_moves = 0
     if any(0 in row for row in arr):
         return False
-    elif any([arr[i][j] == arr[i][j+1] for i in range(0,3) for j in range(0,3)]):
+    elif any([arr[i][j] == arr[i][j+1] for i in range(0,4) for j in range(0,3)]):
         return False
-    elif any([arr[i][j] == arr[i+1][j] for i in range(0,3) for j in range(0,3)]):
+    elif any([arr[i][j] == arr[i+1][j] for i in range(0,3) for j in range(0,4)]):
         return False
     else:
         game_over = True
         return True
-#        # row check
-#        available_moves += find_available_moves()
-#        # column check
-#        zip_arr()
-#        available_moves += find_available_moves()
-#        # reset
-#        zip_arr()
-#    if not available_moves:
-#        game_over = True
-
-#def find_available_moves():
-#    """Checks for adjacent tiles with same value on board."""
-#    
-#    count = 0
-#    for row in arr:
-#        for col, current_num in enumerate(row):
-#            if col < 3:
-#                adjacent_num = row[col+1]
-#                if current_num == adjacent_num:
-#                    count += 1
-#    return count
     
 def print_arr():
-    """Print game board."""
+    """Print game board to command output."""
     
+    ## minimalist game board format
     max_width = len(str(max([max(n) for n in arr])))+1
-    row_format = ("{:"+str(max_width)+"}")*4
+    row_format = ("{:"+str(max_width+1)+"}")*4
     print()
+    print('.'+(' '*(max_width-1)+'.')*4)
     for row in arr:
-        print(row_format.format(*row))
-        print()
+        display_row = [str(x) if x != 0 else str() for x in row]
+        print(row_format.format(*display_row))
+        print('.'+(' '*(max_width-1)+'.')*4)
+    print()
+
+    ## fancy pants game board formatting
+    # row_format = ("{:^9}")*4
+    # print()
+    # for row in arr:
+    #     display_row = [str(x) if x != 0 else str() for x in row]
+    #     print('------'*6+'-')
+    #     print('|        '*4+'|')
+    #     print(row_format.format(*display_row))
+    #     print('|        '*4+'|')
+    # print('------'*6+'-')
 
 def reset_arr():
     """Reset game board and populate with 2 random tiles."""
@@ -210,30 +292,39 @@ def reset_arr():
         reset_arr()
 
 def new_game():
+    global move_count
+    global game_over
+    global TOTAL_POINTS
+
+    game_over = False
+    move_count = 0
+    TOTAL_POINTS = 0
     reset_arr()
     print_arr()
     
 def test_game(iterations):
     """Runs iterations and reports frequency distribution of high scores."""
     
-    global game_over
-    global arr
+    # global game_over
+    # global arr
     global high_scores_board
     global move_count
     global top_score_move_count
-    
+    global manual
+
     high_scores_dict = collections.defaultdict(int)
     dict_double = collections.defaultdict(int)
     move_count_dict = collections.defaultdict(int)
     high_scores_board = list()
-    
-    for game in enumerate(range(iterations)):
-        reset_arr()
-        game_over = False
-        move_count = 0
-        
+    manual = False
+
+    for game in range(iterations):
+
+        main(manual=False)
+
         while not game_over:
-            logic_algorithms()
+            # logic_algorithms()
+            shuffle_algorithm()
 
         high_score = max([max(n) for n in arr])
         high_scores_dict[high_score] += 1
@@ -256,9 +347,6 @@ def test_game(iterations):
     sorted_dict = collections.defaultdict(int)
     for key in sorted(high_scores_dict.keys()):
         sorted_dict[key] = high_scores_dict[key]
-#    plt.bar(range(len(high_scores_dict)), list(sorted_dict.values()), align='center')
-#    plt.xticks(range(len(high_scores_dict)), list(sorted_dict.keys()))
-#    plt.show()
     
     plt.bar(list(move_count_dict.keys()), move_count_dict.values(), 
                 color='b', width=2)
@@ -267,8 +355,9 @@ def test_game(iterations):
     plt.xlabel('# of moves')
     plt.ylabel('# of games')
 
-    print(sorted_dict)
-    print(dict_double)
+    print(dict(sorted_dict))
+    print(dict(dict_double))
+
     try:
         print("Top Score Move Count:",top_score_move_count)
     except NameError:
@@ -279,6 +368,24 @@ def print_turn(turn):
     enabled = False
     if enabled:
         print(turn)
+
+# testing only
+def shuffle_algorithm():
+    """Only left, down, left, up."""
+    if check_game_over():
+        return
+    
+    else:
+        algorithm = [left, down, left, up]
+        check_original_arr = copy.deepcopy(arr)
+        for move_choice in algorithm:
+            move_choice()
+#                if original_arr != arr:
+#                    break
+        if check_original_arr == arr:
+            right()
+            down()
+            left()
         
 def logic_algorithms():
     """Tuning for best performance."""
@@ -292,16 +399,7 @@ def logic_algorithms():
     
     else:
         max_val_first_col = max(*[n[0] for n in arr])      
-        if arr[1][0] == max_val_first_col and arr[0][0] == 0 and max_val_first_col:
-            print_turn('4a')
-            up()
-            logic_algorithms()
-            
-        elif arr[2][0] == max_val_first_col and arr[3][0] == 0 and max_val_first_col:
-            print_turn('4b')
-            down()
-            logic_algorithms()
-            
+
         if arr[0][0] != 0 and arr[0][0] == arr[1][1] and arr[1][0] == arr[2][1]:
             up()
             left()
@@ -316,8 +414,8 @@ def logic_algorithms():
         # Ex: [2,0,0,0],[2,0,0,0],[2,0,0,0],[2,0,0,0]
         elif check_same_four_one_col():
             print_turn('1b')
-            down()
-            down()
+            up()
+            up()
             logic_algorithms()
     
         # slides if 2 rows or columns that could combine tiles
@@ -327,7 +425,7 @@ def logic_algorithms():
             logic_algorithms()
         elif check_double_move_vertical():
             print_turn('2b')
-            down()
+            up()
             logic_algorithms()
          
         # if max cell in top left or bottom left, keep it there
@@ -344,6 +442,7 @@ def logic_algorithms():
             if check_original_arr == arr:
                 down()
                 logic_algorithms()
+
         ## BOTTOM LEFT
         elif arr[3][0] == max_val_first_col and (any([row[0] == 0 for row in arr])
         or any([arr[i][0] == arr[i+1][0] for i in range(0,2)])):
@@ -357,16 +456,36 @@ def logic_algorithms():
             if check_original_arr == arr:
                 up()
                 logic_algorithms()
-    
+
+        if arr[1][0] == max_val_first_col and arr[0][0] == 0 and max_val_first_col:
+            print_turn('4a')
+            up()
+            logic_algorithms()
+            
+        elif arr[2][0] == max_val_first_col and arr[3][0] == 0 and max_val_first_col:
+            print_turn('4b')
+            down()
+            logic_algorithms()
+
+        elif arr[1][0] == max_val_first_col and arr[2:][0] == 0 and max_val_first_col:
+            print_turn('4a')
+            down()
+            logic_algorithms()
+            
+        elif arr[2][0] == max_val_first_col and arr[0:2][0] == 0 and max_val_first_col:
+            print_turn('4b')
+            down()
+            logic_algorithms()
+
         # regular left shuffle algorithm
         if all([arr[i][0] != arr[i+1][0] for i in range(0,3)]) and 0 not in [n[0] for n in arr]:
             print_turn('5')
-            algorithm = [left, down, left, up]
+            algorithm = [left, up, left, down]
             check_original_arr = copy.deepcopy(original_arr)
             for move_choice in algorithm:
                 move_choice()
-#                if original_arr != arr:
-#                    break
+                # if original_arr != arr:
+                #     break
             if check_original_arr == arr:
                 right()
                 left()
@@ -477,9 +596,7 @@ def get_highest_board_score():
     else:
         print('No winning games')      
         
-test_game(1000)
-get_highest_board_score()
-
+test_game(2)
+# get_highest_board_score()
 #print_high_scores()
-
-
+# main()
