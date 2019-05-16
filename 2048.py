@@ -24,6 +24,7 @@ my_font = pg.font.SysFont('Monospace',25)
 my_font.set_bold(True)
 header_font = pg.font.SysFont('Monospace', 40)
 score_font = pg.font.SysFont('Monospace', 25)
+high_score_font = pg.font.SysFont('Monospace', 20)
 restart_font = pg.font.SysFont('Monospace', 30)
 
 header = header_font.render('2048', 1, (0,255,0))
@@ -51,7 +52,7 @@ def main(manual=True):
                 pg.quit()
                 sys.exit()
 
-            if not game_over:
+            if not check_game_over():
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_UP:
                         # print('U')
@@ -78,9 +79,20 @@ def main(manual=True):
 
 def print_matrix():
 
+    global high_score
+
     GAME_BOARD.fill((0,0,0))
     pg.draw.rect(GAME_BOARD, (0,50,0), (155,25,110,23))
     GAME_BOARD.blit(header, ((400/2)-40,10))
+
+    current_score = score_font.render(str(TOTAL_POINTS), 1, (0, 255, 0))
+    GAME_BOARD.blit(current_score, ((200 - len(str(TOTAL_POINTS))*5), 60))
+
+    if TOTAL_POINTS > high_score:
+        high_score = TOTAL_POINTS
+
+    high_score_alltime = high_score_font.render(str(high_score), 1, (0,255,0))
+    GAME_BOARD.blit(high_score_alltime, (3, 3))
 
     tileMatrix2 = [[str(x) if x != 0 else str() for x in row] for row in arr]
     # print(tileMatrix2)
@@ -88,13 +100,10 @@ def print_matrix():
         for j in range(0, 4):
             pg.draw.rect(GAME_BOARD, getColor(arr[j][i]), (i*(400/4), j*(400/4) + 100, 400/4.1, 400/4.1))
             
-            label = my_font.render(str(tileMatrix2[j][i]), 1, getColorNum(arr[j][i]))
-            # label2 = score_font.render("score: " + str(TOTAL_POINTS), 1, (0, 255, 0))
-            label2 = score_font.render(str(TOTAL_POINTS), 1, (0, 255, 0))
+            tile_value = my_font.render(str(tileMatrix2[j][i]), 1, getColorNum(arr[j][i]))
 
             len_value = len(tileMatrix2[j][i])
-            GAME_BOARD.blit(label, (i*(400/4) + 40 - (len_value*7), j*(400/4) + 138))
-            GAME_BOARD.blit(label2, ((200 - len(str(TOTAL_POINTS))*5), 60))
+            GAME_BOARD.blit(tile_value, (i*(400/4) + 40 - (len_value*7), j*(400/4) + 138))
 
 def print_game_over():
 
@@ -105,6 +114,11 @@ def print_game_over():
 
     GAME_BOARD.blit(game_over_banner, (100, 265))
     GAME_BOARD.blit(reset_banner, (130, 320))
+
+    if check_high_score():
+        high_score_banner = header_font.render('HIGH SCORE!', 1, (0,0,0))
+        pg.draw.rect(GAME_BOARD, (0,255,0), (40,85, 330, 80))
+        GAME_BOARD.blit(high_score_banner, (60, 100))
 
 def move():
     """Base logic for all directional moves."""
@@ -243,7 +257,37 @@ def check_game_over():
     else:
         game_over = True
         return True
-    
+
+def check_high_score():
+
+    try:
+        load_high_score()
+        if TOTAL_POINTS >= high_score:
+            save_high_score()
+            return True
+        else:
+            return False
+    except FileNotFoundError:
+        save_high_score()
+
+def save_high_score():
+
+    with open("2048_meta", "w") as f:
+        f.write(str(TOTAL_POINTS))
+
+def load_high_score():
+
+    global high_score
+
+    try:
+        with open('2048_meta', 'r') as f:
+            high_score = int(f.readline())
+    except FileNotFoundError:
+        high_score = 0
+
+def track_high_score():
+    """If high score is surpassed during a game, track in memory to continuously update game board."""
+
 def print_arr():
     """Print game board to command output."""
     
@@ -301,6 +345,7 @@ def new_game():
     TOTAL_POINTS = 0
     reset_arr()
     print_arr()
+    load_high_score()
     
 def test_game(iterations):
     """Runs iterations and reports frequency distribution of high scores."""
@@ -596,7 +641,7 @@ def get_highest_board_score():
     else:
         print('No winning games')      
         
-test_game(2)
+# test_game(2)
 # get_highest_board_score()
 #print_high_scores()
-# main()
+main()
