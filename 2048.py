@@ -67,14 +67,14 @@ def main(manual=True):
                         # print('R')
                         right()
                     print_matrix()
+                    time.sleep(0.05)
+                    add_new()
+                    print_matrix()
             else:
-                print_game_over()
+                print_game_over()             
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_r:
                         main()
-
-        pg.display.update()
-        # pg.display.flip()
     new_game()
 
 def print_matrix():
@@ -98,12 +98,14 @@ def print_matrix():
     # print(tileMatrix2)
     for i in range(0, 4):
         for j in range(0, 4):
-            pg.draw.rect(GAME_BOARD, getColor(arr[j][i]), (i*(400/4), j*(400/4) + 100, 400/4.1, 400/4.1))
+            pg.draw.rect(GAME_BOARD, get_color_tile(arr[j][i]), (i*(400/4), j*(400/4) + 100, 400/4.1, 400/4.1))
             
-            tile_value = my_font.render(str(tileMatrix2[j][i]), 1, getColorNum(arr[j][i]))
+            tile_value = my_font.render(str(tileMatrix2[j][i]), 1, get_color_num(arr[j][i]))
 
             len_value = len(tileMatrix2[j][i])
             GAME_BOARD.blit(tile_value, (i*(400/4) + 40 - (len_value*7), j*(400/4) + 138))
+    
+    pg.display.update()
 
 def print_game_over():
 
@@ -119,6 +121,7 @@ def print_game_over():
         high_score_banner = header_font.render('HIGH SCORE!', 1, (0,0,0))
         pg.draw.rect(GAME_BOARD, (0,255,0), (40,85, 330, 80))
         GAME_BOARD.blit(high_score_banner, (60, 100))
+    pg.display.update()
 
 def move():
     """Base logic for all directional moves."""
@@ -145,7 +148,6 @@ def move():
                     row.append(0)
                     time.sleep(0.01)
                     row.pop(col+1)
-                    print(row)
 
 def check_if_manual():
     if manual:
@@ -156,7 +158,7 @@ def left():
     
     check_non_move()
     move()
-    add_new()
+    # add_new()
     # check_if_manual()
     
 def right():
@@ -166,7 +168,7 @@ def right():
     row_reverse()
     move()
     row_reverse()
-    add_new()
+    # add_new()
     # check_if_manual()
         
 def up():
@@ -176,7 +178,7 @@ def up():
     zip_arr()
     move()
     zip_arr()
-    add_new()
+    # add_new()
     # check_if_manual()
     
 def down():
@@ -188,7 +190,7 @@ def down():
     move()
     row_reverse()
     zip_arr()
-    add_new()
+    # add_new()
     # check_if_manual()
 
 def row_reverse():
