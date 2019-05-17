@@ -7,16 +7,16 @@ Created on Thu May  9 11:54:42 2019
 import random, copy, math, time, sys
 import collections
 import matplotlib.pyplot as plt
-from myColors import *
 
 import pygame as pg
+from myColors import *
 
-global game_over
-global arr
-global high_scores_board
-global move_count
-global top_score_move_count
-global manual
+# global game_over
+# global arr
+# global high_scores_board
+# global move_count
+# global top_score_move_count
+# global manual
 
 manual = True
 pg.init()
@@ -28,11 +28,7 @@ high_score_font = pg.font.SysFont('Monospace', 20)
 restart_font = pg.font.SysFont('Monospace', 30)
 
 header = header_font.render('2048', 1, (0,255,0))
-# # text_surface = my_font.render(arr, False, (0,255,0))
 GAME_BOARD = pg.display.set_mode((400,500), 0, 32)
-
-# surf = pg.Surface((4,4))
-# pg.surfarray.blit_array(GAME_BOARD, arr)
 pg.display.set_caption('2048')
 
 
@@ -67,7 +63,7 @@ def main(manual=True):
                         # print('R')
                         right()
                     print_matrix()
-                    time.sleep(0.05)
+                    time.sleep(0.08)
                     add_new()
                     print_matrix()
             else:
@@ -75,7 +71,6 @@ def main(manual=True):
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_r:
                         main()
-    new_game()
 
 def print_matrix():
 
@@ -98,12 +93,12 @@ def print_matrix():
     # print(tileMatrix2)
     for i in range(0, 4):
         for j in range(0, 4):
-            pg.draw.rect(GAME_BOARD, get_color_tile(arr[j][i]), (i*(400/4), j*(400/4) + 100, 400/4.1, 400/4.1))
+            pg.draw.rect(GAME_BOARD, get_color_tile(arr[j][i]), (i*(400/4)+4.5, j*(400/4) + 100, 400/4.3, 400/4.3))
             
             tile_value = my_font.render(str(tileMatrix2[j][i]), 1, get_color_num(arr[j][i]))
 
             len_value = len(tileMatrix2[j][i])
-            GAME_BOARD.blit(tile_value, (i*(400/4) + 40 - (len_value*7), j*(400/4) + 138))
+            GAME_BOARD.blit(tile_value, (i*(400/4) + 40 - (len_value*5), j*(400/4) + 138))
     
     pg.display.update()
 
@@ -121,6 +116,7 @@ def print_game_over():
         high_score_banner = header_font.render('HIGH SCORE!', 1, (0,0,0))
         pg.draw.rect(GAME_BOARD, (0,255,0), (40,85, 330, 80))
         GAME_BOARD.blit(high_score_banner, (60, 100))
+
     pg.display.update()
 
 def move():
@@ -129,25 +125,24 @@ def move():
 
     for row in arr:
         # move zeros to end of row
-        for col, current_num in enumerate(row):
-            if current_num == 0:
-                row.remove(current_num)
-                row.append(0)
+        for zero in range(row.count(0)):
+            row.remove(0)
+            row.append(0)
+
         # combine adjacent tiles that match
         for col, current_num in enumerate(row):
-            if current_num != 0 and col < 3:
+            if current_num != 0 and col < 3 and current_num == row[col+1]:
                 adjacent_num = row[col+1]
-                if current_num == adjacent_num:
-                    new = current_num + adjacent_num
-                    TOTAL_POINTS += new
-                    time.sleep(0.01)
-                    row.pop(col)
-                    time.sleep(0.01)
-                    row.insert(col, new)
-                    time.sleep(0.01)
-                    row.append(0)
-                    time.sleep(0.01)
-                    row.pop(col+1)
+                new_num = current_num + adjacent_num
+                TOTAL_POINTS += new_num
+                time.sleep(0.01)
+                row.pop(col)
+                time.sleep(0.01)
+                row.insert(col, new_num)
+                time.sleep(0.01)
+                row.append(0)
+                time.sleep(0.01)
+                row.pop(col+1)
 
 def check_if_manual():
     if manual:
@@ -224,7 +219,7 @@ def add_new():
         if 0 in arr[row]:
             zeros = [i for i, val in enumerate(arr[row]) if val==0]
             replace = random.choice(zeros)
-            arr[row].remove(arr[row][replace])
+            arr[row].pop(replace)
             arr[row].insert(replace, new)
             move_count += 1
             if not manual:
