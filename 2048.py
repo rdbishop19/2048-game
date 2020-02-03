@@ -135,29 +135,36 @@ def update_score(new_num):
     TOTAL_POINTS += new_num
     return
 
-def move():
-    """Base logic for all directional moves."""
-    for row in arr:
+def move(array):
+    """
+    Base logic for all directional moves.
+    """
+    
+    for row in array:
         # move zeros to end of row
-        for zero in range(row.count(0)):
+        for _ in range(row.count(0)):
             row.remove(0)
             row.append(0)
 
         # combine adjacent tiles that match
-        for col, current_num in enumerate(row):
-            if current_num != 0 and col < 3 and current_num == row[col+1]:
-                adjacent_num = row[col+1]
+        points_to_add = 0
+
+        for index, current_num in enumerate(row):
+            if current_num != 0 and index < 3 and current_num == row[index+1]:
+                adjacent_num = row[index+1]
                 new_num = current_num + adjacent_num
-                update_score(new_num)
+                points_to_add += new_num
                 time.sleep(0.01)
-                row.pop(col)
+                row.pop(index)
                 time.sleep(0.01)
-                row.insert(col, new_num)
+                row.insert(index, new_num)
                 time.sleep(0.01)
                 row.append(0)
                 time.sleep(0.01)
-                row.pop(col+1)
+                row.pop(index+1)
 
+        update_score(points_to_add)
+    return
 
 def check_if_manual():
     if manual:
@@ -168,7 +175,7 @@ def left():
     """Slide tiles LEFT"""
 
     check_non_move()
-    move()
+    move(arr)
     # add_new()
     # check_if_manual()
 
@@ -178,7 +185,7 @@ def right():
 
     check_non_move()
     row_reverse()
-    move()
+    move(arr)
     row_reverse()
     # add_new()
     # check_if_manual()
@@ -189,7 +196,7 @@ def up():
 
     check_non_move()
     zip_arr()
-    move()
+    move(arr)
     zip_arr()
     # add_new()
     # check_if_manual()
@@ -201,7 +208,7 @@ def down():
     check_non_move()
     zip_arr()
     row_reverse()
-    move()
+    move(arr)
     row_reverse()
     zip_arr()
     # add_new()
